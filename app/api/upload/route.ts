@@ -3,12 +3,22 @@ import fs from "fs"
 import path from "path"
 import { v2 as cloudinary } from 'cloudinary'
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET
-})
+const cloudinaryConfig = process.env.CLOUDINARY_URL
+  ? { cloudinary_url: process.env.CLOUDINARY_URL, secure: true }
+  : {
+      cloud_name: process.env.CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUD_API_KEY || process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUD_API_SECRET || process.env.CLOUDINARY_API_SECRET,
+      secure: true,
+    }
+
+if (!cloudinaryConfig.cloudinary_url && (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key || !cloudinaryConfig.api_secret)) {
+  throw new Error(
+    'Missing Cloudinary configuration. Set CLOUDINARY_URL, or CLOUD_NAME/CLOUD_API_KEY/CLOUD_API_SECRET, or CLOUDINARY_CLOUD_NAME/CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET.'
+  )
+}
+
+cloudinary.config(cloudinaryConfig)
 
 export async function POST(req: NextRequest) {
   try {
@@ -265,7 +275,7 @@ export async function POST(req: NextRequest) {
     console.error(error)
 
     return NextResponse.json(
-      { error: "Upload failed" },
+      { error: error instanceof Error ? error.message : "Upload failed" },
       { status: 500 }
     )
   }
