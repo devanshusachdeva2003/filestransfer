@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
+import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaInstagram, FaShareAlt, FaCheck } from 'react-icons/fa'
 
 type Props = {
   onFiles?: (files: File[]) => void
@@ -22,6 +23,8 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
   const [subject, setSubject] = useState('')
   const [customLink, setCustomLink] = useState('')
   const [password, setPassword] = useState('')
+  const [copied, setCopied] = useState(false)
+  const [instaCopied, setInstaCopied] = useState(false)
 
   const openFileDialog = () => {
     console.debug('openFileDialog', !!fileInputRef.current)
@@ -109,6 +112,31 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
   const copyLink = async () => {
     if (!shareUrl) return
     await navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const copyForInstagram = async () => {
+    if (!shareUrl) return
+    await navigator.clipboard.writeText(shareUrl)
+    setInstaCopied(true)
+    setTimeout(() => setInstaCopied(false), 2000)
+  }
+
+  const handleNativeShare = async () => {
+    if (navigator.share && shareUrl) {
+      try {
+        await navigator.share({
+          title: 'Shared Files',
+          text: 'Check out these files I shared with you:',
+          url: shareUrl,
+        })
+      } catch (err) {
+        console.error('Share failed', err)
+      }
+    } else {
+      copyLink()
+    }
   }
 
   const removeFile = (id: string) => {
@@ -373,23 +401,105 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
 
                   {/* Footer / Share Link */}
                   {showFiles && shareUrl && (
-                    <div className="p-6 border-t border-slate-50 bg-indigo-50/30">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-                        <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Link is ready</p>
+                    <div className="p-6 border-t border-slate-50 bg-indigo-50/30 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                          <p className="text-[10px] font-bold text-indigo-900 uppercase tracking-widest">Link is ready</p>
+                        </div>
+                        <button 
+                          onClick={handleNativeShare}
+                          className="text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest"
+                        >
+                          <FaShareAlt className="w-3 h-3" />
+                          Share
+                        </button>
                       </div>
+                      
                       <div className="flex gap-2">
-                        <input
-                          value={shareUrl ?? ''}
-                          readOnly
-                          className="flex-1 bg-white border border-indigo-100 rounded-lg px-3 py-2 text-xs text-slate-700 truncate focus:outline-none"
-                        />
+                        <div className="relative flex-1">
+                          <input
+                            value={shareUrl ?? ''}
+                            readOnly
+                            className="w-full bg-white border border-indigo-100 rounded-xl px-4 py-2.5 text-xs text-slate-700 truncate focus:outline-none focus:ring-2 focus:ring-indigo-500/10"
+                          />
+                        </div>
                         <button
                           onClick={copyLink}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition-all shadow-sm active:scale-95"
+                          className={`min-w-[80px] font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 ${
+                            copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                          }`}
                         >
-                          Copy
+                          {copied ? (
+                            <>
+                              <FaCheck className="w-3 h-3" />
+                              Copied
+                            </>
+                          ) : (
+                            'Copy'
+                          )}
                         </button>
+                      </div>
+
+                      <div className="flex items-center justify-center gap-3 pt-2">
+                        <a
+                          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-emerald-100 text-emerald-500 rounded-full hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm group"
+                          title="Share on WhatsApp"
+                        >
+                          <FaWhatsapp className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a
+                          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-blue-100 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm group"
+                          title="Share on Facebook"
+                        >
+                          <FaFacebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a
+                          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-slate-100 text-slate-900 rounded-full hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all shadow-sm group"
+                          title="Share on X (Twitter)"
+                        >
+                          <FaTwitter className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a
+                          href={`https://telegram.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out these files I shared with you!')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-sky-100 text-sky-500 rounded-full hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all shadow-sm group"
+                          title="Share on Telegram"
+                        >
+                          <FaTelegram className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <div className="relative">
+                          <button
+                            onClick={copyForInstagram}
+                            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all shadow-sm group border ${
+                              instaCopied 
+                                ? 'bg-pink-500 border-pink-500 text-white' 
+                                : 'bg-white border-pink-100 text-pink-500 hover:bg-pink-500 hover:text-white hover:border-pink-500'
+                            }`}
+                            title="Copy Link for Instagram"
+                          >
+                            {instaCopied ? (
+                              <FaCheck className="w-4 h-4 animate-in zoom-in duration-200" />
+                            ) : (
+                              <FaInstagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            )}
+                          </button>
+                          {instaCopied && (
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-200 whitespace-nowrap">
+                              Copied!
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
