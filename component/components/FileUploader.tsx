@@ -163,31 +163,40 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
       <div className="relative flex items-center justify-center w-full h-full">
         {/* Center control: shown inside Hero spinner */}
         {!panelOpen && (
-          <div className="relative group flex items-center justify-center w-full h-full">
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 inline-flex flex-row flex-nowrap items-center space-x-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-md whitespace-nowrap">
-              <button onClick={() => setPanelOpen(true)} className="px-3 py-2 text-xs font-semibold bg-white rounded-md shadow-sm hover:bg-indigo-50 whitespace-nowrap">Send files</button>
-              <button onClick={() => setPanelOpen(true)} className="px-3 py-2 text-xs font-semibold bg-white rounded-md shadow-sm hover:bg-indigo-50 whitespace-nowrap">Create a link</button>
-            </div>
+           <div className="relative group flex items-center justify-center w-full h-full">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        setActiveTab("link");
+        setPanelOpen(true);
+      }}
+      className="relative group flex items-center justify-center w-full h-full cursor-pointer"
+    >
+      <span className="absolute inset-0 flex items-center justify-center text-orange-300 font-semibold transition-opacity duration-150 group-hover:opacity-0 mt-19 text-2xl">
+        Start
+      </span>
 
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setPanelOpen(true)}
-              className="relative group flex items-center justify-center w-full h-full"
-            >
-              <span className="absolute inset-0 flex items-center justify-center text-orange-500 font-semibold transition-opacity duration-150 group-hover:opacity-0">Start</span>
-              <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-orange-400"><path d="M19 18a4 4 0 0 0-.97-7.88A6 6 0 0 0 6.24 9.2 4.5 4.5 0 0 0 6.5 18H10v-3.59L8.7 15.7a1 1 0 1 1-1.4-1.4l3-3a1 1 0 0 1 1.4 0l3 3a1 1 0 1 1-1.4 1.4L12 14.41V18h7Z" /></svg>
-              </span>
-            </div>
-          </div>
-        )}
+      <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-15 h-15 text-orange-300 mt-38"
+        >
+          <path d="M19 18a4 4 0 0 0-.97-7.88A6 6 0 0 0 6.24 9.2 4.5 4.5 0 0 0 6.5 18H10v-3.59L8.7 15.7a1 1 0 1 1-1.4-1.4l3-3a1 1 0 0 1 1.4 0l3 3a1 1 0 1 1-1.4 1.4L12 14.41V18h7Z" />
+        </svg>
+      </span>
+    </div>
+  </div>
+)}
 
         {/* Panel: fixed modal overlay centered on viewport */}
 
         {/* Panel: Static layout when open */}
         {panelOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 md:p-8 overflow-y-auto animate-in fade-in duration-300">
+           
             <div
               className="relative w-full max-w-[1000px] flex flex-row flex-wrap justify-center items-start gap-8"
             >
@@ -221,20 +230,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
               {/* LEFT CARD: Form & Tabs */}
               <div className="relative bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.25)] rounded-3xl w-full sm:w-[380px] lg:w-[420px] flex flex-col overflow-hidden h-[560px] md:h-[650px] max-h-[calc(100vh-100px)] animate-in slide-in-from-left-8 duration-700">
                 {/* Tabs */}
-                <div className="flex border-b">
-                  <button
-                    onClick={() => setActiveTab('send')}
-                    className={`flex-1 py-4 text-sm font-semibold transition-all ${activeTab === 'send' ? 'bg-white text-slate-900 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Send files
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('link')}
-                    className={`flex-1 py-4 text-sm font-semibold transition-all ${activeTab === 'link' ? 'bg-white text-slate-900 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Create a link
-                  </button>
-                </div>
+              
 
                 <div className="p-6 flex-1 flex flex-col">
                     <div className="space-y-4 flex-1">

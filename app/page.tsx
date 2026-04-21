@@ -1,22 +1,29 @@
-import Hero from  "@/component/components/Hero";
-import FileSteps from "@/component/components/file";   
-import FileUploader from "@/component/components/FileUploader";
+"use client";
 
+import { useState } from "react";
+import Navbar from "@/component/components/Navbar";
+import Hero from "@/component/components/Hero";
+import FileSteps from "@/component/components/file";
+import LoginSlider from "@/component/components/LoginSlider";
+import ScrollToTop from "@/component/components/ScrollToTop";
 export default function Home() {
+  const [openLogin, setOpenLogin] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-50">
-      
-      {/* Hero Section */}
+      <Navbar setOpenLogin={setOpenLogin} />
+
       <Hero />
 
-      {/* Steps UI */}
       <div className="mt-10">
         <FileSteps />
       </div>
 
-      {/* File Upload */}
-      {/* File Upload (moved into Hero) */}
-
+      <LoginSlider
+        openLogin={openLogin}
+        setOpenLogin={setOpenLogin}
+      />
+      <ScrollToTop />
     </main>
-  )
+  );
 }
