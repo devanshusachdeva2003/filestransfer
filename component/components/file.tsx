@@ -212,7 +212,7 @@ const FileSteps: React.FC = () => {
           </h2>
 
           <p className="mt-8 text-lg text-[#4a4a52]">
-            Discover our tool for creating <span className="font-semibold">customized forms</span> and then by adding a{" "}
+            Discover our tool for creating <span className="text-black">customized forms</span> and then by adding a{" "}
             <span className="font-semibold">simple line of HTML code</span> on your internet site you can directly receive files.
           </p>
 
