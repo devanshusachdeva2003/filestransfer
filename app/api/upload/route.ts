@@ -33,13 +33,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 📁 Folder where files will be stored
-    const uploadDir = path.join(process.cwd(), "public/uploads")
-
-    // Create folder if not exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-    }
+    // Note: do not write into the deployed bundle. Share pages are uploaded
+    // to Cloudinary as raw files so they are persistent and publicly accessible.
 
     const uploadedFiles: string[] = []
 
@@ -335,10 +330,27 @@ export async function POST(req: NextRequest) {
       }
 
       const shareHtml = parts.join('\n')
-      const shareName = `share-${Date.now()}.html`
-      const shareFilePath = path.join(uploadDir, shareName)
-      fs.writeFileSync(shareFilePath, shareHtml, 'utf8')
-      sharePath = `/uploads/${shareName}`
+      try {
+        const buf = Buffer.from(shareHtml, 'utf8')
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'ad-transfer-shares',
+              resource_type: 'raw',
+              public_id: `share-${Date.now()}`,
+            },
+            (error, result) => {
+              if (error) reject(error)
+              else resolve(result)
+            }
+          )
+          uploadStream.end(buf)
+        }) as any
+        sharePath = result?.secure_url || result?.url || null
+      } catch (e) {
+        console.error('share upload failed', e)
+        sharePath = null
+      }
     }
 
     return NextResponse.json({
