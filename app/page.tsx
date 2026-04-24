@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/component/components/Navbar";
 import Hero from "@/component/components/Hero";
 import FileSteps from "@/component/components/file";
@@ -8,6 +8,12 @@ import LoginSlider from "@/component/components/LoginSlider";
 import ScrollToTop from "@/component/components/ScrollToTop";
 export default function Home() {
   const [openLogin, setOpenLogin] = useState(false);
+  // allow other components to request opening the login slider
+  useEffect(() => {
+    const handler = () => setOpenLogin(true)
+    window.addEventListener('open-login', handler)
+    return () => window.removeEventListener('open-login', handler)
+  }, [])
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -27,3 +33,4 @@ export default function Home() {
     </main>
   );
 }
+
