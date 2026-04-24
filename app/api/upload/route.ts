@@ -52,11 +52,13 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
+
+      // keep track of total size (bytes) for server-side enforcement
       totalBytes += buffer.length
       fileBuffers.push({ file, buffer })
     }
 
-    // Check authentication: allow large uploads only if a token is present
+    // Check authentication: validate token when present
     const authHeader = req.headers.get('authorization')
     let token: string | null = null
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -70,7 +72,29 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (totalBytes > MAX_SIZE && !token) {
+    // validate token using in-memory auth module if present
+    let validUser: string | null = null
+    if (token) {
+      try {
+        const mod = await import('@/app/lib/auth')
+        const verifyToken = mod.verifyToken
+        if (typeof verifyToken === 'function') {
+          // support both sync and async verifyToken implementations
+          const maybe = verifyToken(token)
+          validUser = maybe instanceof Promise ? await maybe : maybe
+        } else {
+          validUser = null
+        }
+      } catch (e) {
+        console.error('auth verify/import failed', e)
+        // expose minimal debug info in response body for local debugging (non-sensitive)
+        return NextResponse.json({ error: 'Auth verify failed', detail: String(e) }, { status: 500 })
+      }
+    }
+
+    console.log('upload route debug', { totalBytes, tokenPresent: !!token, validUser })
+
+    if (totalBytes > MAX_SIZE && !validUser) {
       return NextResponse.json({ error: 'Authentication required for uploads larger than 100MB' }, { status: 401 })
     }
 
@@ -96,6 +120,15 @@ export async function POST(req: NextRequest) {
 
       uploadedFiles.push(result.secure_url)
       console.log("Cloudinary Upload Successful:", result.secure_url)
+    }
+
+    // Server-side: if total upload > 100MB and no auth token, block share creation
+    const LIMIT = 100 * 1024 * 1024
+    const cookie = req.headers.get('cookie') || ''
+    const hasToken = /(^|; )token=([^;]+)/.test(cookie)
+
+    if (createShare && totalBytes > LIMIT && !hasToken) {
+      return NextResponse.json({ error: 'Authentication required for shares larger than 100MB' }, { status: 401 })
     }
 
     // If requested, create a public HTML share page that lists links to uploaded files

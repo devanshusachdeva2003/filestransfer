@@ -45,6 +45,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
   const [panelOpen, setPanelOpenState] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showFiles, setShowFiles] = useState(false)
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false)
 
   const setPanelOpen = (val: boolean | ((s: boolean) => boolean)) => {
     setPanelOpenState(val)
@@ -94,8 +95,40 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
       if (subject) fd.append('subject', subject)
       if (password) fd.append('password', password)
 
-      const res = await fetch('/api/upload', { method: 'POST', body: fd })
-      const data = await res.json()
+      // attach token if available (send as Authorization header and include credentials)
+      let token: string | null = null
+      try { token = localStorage.getItem('token') } catch (e) { token = null }
+      if (!token) {
+        try { token = document.cookie.match(/(^|; )token=([^;]+)/)?.[2] || null } catch (e) { token = null }
+      }
+
+      const fetchOpts: any = { method: 'POST', body: fd, credentials: 'include' }
+      if (token) fetchOpts.headers = { Authorization: `Bearer ${token}` }
+
+      const res = await fetch('/api/upload', fetchOpts)
+      const ct = res.headers.get('content-type') || ''
+
+      if (!res.ok) {
+        // try to extract message from JSON or text
+        if (ct.includes('application/json')) {
+          const err = await res.json()
+          throw new Error(err?.error || JSON.stringify(err))
+        } else {
+          const txt = await res.text()
+          throw new Error(txt || `Upload failed with status ${res.status}`)
+        }
+      }
+
+      let data: any = null
+      if (ct.includes('application/json')) {
+        data = await res.json()
+      } else {
+        // server returned HTML (often an error page) — capture for debugging
+        const txt = await res.text()
+        console.error('uploadFilesToServer: expected JSON but got:', txt)
+        throw new Error('Server returned unexpected response (not JSON). See console for details.')
+      }
+
       if (data?.share) {
         const origin = typeof window !== 'undefined' ? window.location.origin : ''
         setShareUrl(origin + data.share)
@@ -105,6 +138,8 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
       }
     } catch (err) {
       console.error('upload failed', err)
+      // surface error to caller
+      throw err
     } finally {
       setCreating(false)
     }
@@ -168,18 +203,67 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
     return formatBytes(total)
   }
 
+  const getTotalBytes = () => stagedFiles.reduce((acc, f) => acc + f.size, 0)
+
   const confirmUpload = async () => {
     if (!stagedFiles.length) return
+    // If total upload size is > 100MB require login/register before creating a share link
+    const LIMIT = 100 * 1024 * 1024 // 100 MB
+    const total = getTotalBytes()
+
+    // Check if user is authenticated
+    let token: string | null = null
+    try { token = localStorage.getItem('token') } catch (e) { token = null }
+    if (!token) {
+      try { token = document.cookie.match(/(^|; )token=([^;]+)/)?.[2] || null } catch (e) { token = null }
+    }
+    
+    const isAuth = !!token && token !== 'null' && token !== 'undefined'
+
+    if (total > LIMIT && !isAuth) {
+      // show auth prompt and abort creating a share
+      setShowAuthPrompt(true)
+      return
+    }
+
     onFiles?.(stagedFiles)
     // show spinner and hide files while processing
     setLoading(true)
     setShowFiles(false)
-    await uploadFilesToServer(stagedFiles)
-    setStagedFiles([])
-    // processing finished: hide spinner, show files
-    setLoading(false)
-    setShowFiles(true)
+    try {
+      await uploadFilesToServer(stagedFiles)
+      setStagedFiles([])
+    } catch (err: any) {
+      // surface upload error to user
+      console.error('confirmUpload error', err)
+      try { alert(err?.message || 'Upload failed') } catch (e) {}
+    } finally {
+      // processing finished: hide spinner, show files
+      setLoading(false)
+      setShowFiles(true)
+    }
   }
+
+  // resume upload after a successful login event
+  useEffect(() => {
+    const handler = async () => {
+      const LIMIT = 100 * 1024 * 1024
+      const total = getTotalBytes()
+      if (!showAuthPrompt) return
+      if (total > LIMIT) {
+        // close the auth prompt and proceed with upload now that user is logged in
+        setShowAuthPrompt(false)
+        setLoading(true)
+        setShowFiles(false)
+        await uploadFilesToServer(stagedFiles)
+        setStagedFiles([])
+        setLoading(false)
+        setShowFiles(true)
+      }
+    }
+    window.addEventListener('logged-in', handler)
+    return () => window.removeEventListener('logged-in', handler)
+  }, [showAuthPrompt, stagedFiles])
 
   useEffect(() => {
     return () => {
@@ -191,6 +275,20 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
 
   return (
     <div className={rootClass}>
+      {/* Auth prompt for large uploads */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center">
+            <h3 className="text-lg font-bold mb-2">Sign in to upload large files</h3>
+            <p className="text-sm text-slate-600">Files larger than 100 MB require an account. Please sign in or register to continue.</p>
+            <div className="mt-4 flex gap-3 justify-center">
+              <button onClick={() => window.dispatchEvent(new CustomEvent('open-login'))} className="px-4 py-2 bg-white border rounded-md shadow">Sign in</button>
+              <button onClick={() => window.dispatchEvent(new CustomEvent('open-login'))} className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow">Register</button>
+            </div>
+            <button onClick={() => setShowAuthPrompt(false)} className="mt-4 text-sm text-slate-500">Cancel</button>
+          </div>
+        </div>
+      )}
       <div className="relative flex items-center justify-center w-full h-full">
         {/* Center control: shown inside Hero spinner */}
         {!panelOpen && (
@@ -317,7 +415,19 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      activeTab === 'send' ? 'Transfer' : 'Get a link'
+                      (() => {
+                        const LIMIT = 100 * 1024 * 1024
+                        const total = getTotalBytes()
+                        let token: string | null = null
+                        try { token = localStorage.getItem('token') } catch (e) {}
+                        if (!token) {
+                          try { token = document.cookie.match(/(^|; )token=([^;]+)/)?.[2] || null } catch (e) {}
+                        }
+                        const isAuth = !!token && token !== 'null' && token !== 'undefined'
+                        
+                        if (total > LIMIT && !isAuth) return 'Sign in to transfer'
+                        return activeTab === 'send' ? 'Transfer' : 'Get a link'
+                      })()
                     )}
                   </button>
                 </div>
