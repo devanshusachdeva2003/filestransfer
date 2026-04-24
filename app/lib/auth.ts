@@ -24,7 +24,7 @@ export async function verifyUser(email: string, password: string) {
   const db = await getDb()
   const users = db.collection('users')
   const normalized = email.toLowerCase()
-  const u = await users.findOne<{ salt: string; derived: string } & { name?: string }>( { email: normalized } )
+  const u = await users.findOne({ email: normalized }) as { salt: string; derived: string; name?: string } | null
   if (!u) return false
   const check = hashPassword(password, u.salt)
   try {
