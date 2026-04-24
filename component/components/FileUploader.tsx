@@ -6,9 +6,10 @@ import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaInstagram, FaShareAlt,
 type Props = {
   onFiles?: (files: File[]) => void
   onPanelChange?: (isOpen: boolean) => void
+  compact?: boolean
 }
 
-const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
+const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const folderInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -186,16 +187,15 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
     }
   }, [previews])
 
+  const rootClass = compact ? 'w-full h-full p-0' : 'p-6'
+
   return (
-    <div className="p-6">
+    <div className={rootClass}>
       <div className="relative flex items-center justify-center w-full h-full">
         {/* Center control: shown inside Hero spinner */}
         {!panelOpen && (
           <div className="relative group flex items-center justify-center w-full h-full">
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 inline-flex flex-row flex-nowrap items-center space-x-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-md whitespace-nowrap">
-              <button onClick={() => setPanelOpen(true)} className="px-3 py-2 text-xs font-semibold bg-white rounded-md shadow-sm hover:bg-indigo-50 whitespace-nowrap">Send files</button>
-              <button onClick={() => setPanelOpen(true)} className="px-3 py-2 text-xs font-semibold bg-white rounded-md shadow-sm hover:bg-indigo-50 whitespace-nowrap">Create a link</button>
-            </div>
+            {/* Floating action buttons removed per user request */}
 
             <div
               role="button"

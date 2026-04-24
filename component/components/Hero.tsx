@@ -29,7 +29,7 @@ const Hero = () => {
                 <circle cx="50" cy="50" r="40" stroke="#ff7a18" strokeWidth="10" fill="none" strokeLinecap="round" strokeDasharray="251.2" strokeDashoffset="80" />
               </svg>
 
-              <FileUploader />
+              <FileUploader compact />
             </div>
 
 
