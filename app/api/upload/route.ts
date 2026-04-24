@@ -3,12 +3,22 @@ import fs from "fs"
 import path from "path"
 import { v2 as cloudinary } from 'cloudinary'
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET
-})
+const cloudinaryConfig = process.env.CLOUDINARY_URL
+  ? { cloudinary_url: process.env.CLOUDINARY_URL, secure: true }
+  : {
+      cloud_name: process.env.CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUD_API_KEY || process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUD_API_SECRET || process.env.CLOUDINARY_API_SECRET,
+      secure: true,
+    }
+
+if (!cloudinaryConfig.cloudinary_url && (!cloudinaryConfig.cloud_name || !cloudinaryConfig.api_key || !cloudinaryConfig.api_secret)) {
+  throw new Error(
+    'Missing Cloudinary configuration. Set CLOUDINARY_URL, or CLOUD_NAME/CLOUD_API_KEY/CLOUD_API_SECRET, or CLOUDINARY_CLOUD_NAME/CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET.'
+  )
+}
+
+cloudinary.config(cloudinaryConfig)
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,11 +43,42 @@ export async function POST(req: NextRequest) {
 
     const uploadedFiles: string[] = []
 
+    // Server-side enforcement: compute total bytes up-front so we can require auth for large uploads
+    const MAX_SIZE = 100 * 1024 * 1024 // 100 MB
+
+    // Build buffers for each file (we'll reuse these buffers when uploading)
+    const fileBuffers: { file: File; buffer: Buffer }[] = []
+    let totalBytes = 0
     for (const file of files) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
+      totalBytes += buffer.length
+      fileBuffers.push({ file, buffer })
+    }
 
-      // Upload to Cloudinary
+    // Check authentication: allow large uploads only if a token is present
+    const authHeader = req.headers.get('authorization')
+    let token: string | null = null
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice(7)
+    } else {
+      try {
+        const cookie = req.cookies.get('token')
+        if (cookie) token = cookie.value
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (totalBytes > MAX_SIZE && !token) {
+      return NextResponse.json({ error: 'Authentication required for uploads larger than 100MB' }, { status: 401 })
+    }
+
+    // Upload each buffered file to Cloudinary
+    for (const entry of fileBuffers) {
+      const file = entry.file
+      const buffer = entry.buffer
+
       const result = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
@@ -53,7 +94,6 @@ export async function POST(req: NextRequest) {
         uploadStream.end(buffer)
       }) as any
 
-      // Store Secure Cloud URL
       uploadedFiles.push(result.secure_url)
       console.log("Cloudinary Upload Successful:", result.secure_url)
     }
@@ -64,6 +104,9 @@ export async function POST(req: NextRequest) {
     const subject = formData.get('subject') as string | null
 
     let sharePath: string | null = null
+    // expiration timestamp (4 hours from creation)
+    const EXPIRY_MS = 4 * 60 * 60 * 1000 // 4 hours
+    const expiryTimestamp = Date.now() + EXPIRY_MS
     if (createShare && uploadedFiles.length) {
       const css = `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -159,7 +202,10 @@ export async function POST(req: NextRequest) {
         };
         const encryptedData = encrypt(fileListJson, password);
         
+        // embed expiry timestamp and add client-side expiry check
         parts.push('<script>')
+        parts.push(`const __expiry = ${expiryTimestamp};`)
+        parts.push('if(Date.now() > __expiry){document.write("<div style=\"font-family:Inter,sans-serif;padding:40px;text-align:center;\"><h2>Link expired</h2><p>This share link expired. Please upload again to generate a new one.</p></div>"); throw new Error("expired");}')
         parts.push(`const data = "${encryptedData}";`)
         parts.push('function decrypt(encoded, key) {')
         parts.push('  try {')
@@ -234,7 +280,10 @@ export async function POST(req: NextRequest) {
         }
         parts.push('</div>')
         parts.push('</div>')
+        // embed expiry timestamp and add client-side expiry check for standard pages
         parts.push('<script>')
+        parts.push(`const __expiry = ${expiryTimestamp};`)
+        parts.push('if(Date.now() > __expiry){document.write("<div style=\"font-family:Inter,sans-serif;padding:40px;text-align:center;\"><h2>Link expired</h2><p>This share link expired. Please upload again to generate a new one.</p></div>"); throw new Error("expired");}')
         parts.push('async function downloadAll(){')
         parts.push('  const links = Array.from(document.querySelectorAll(".file-link")).map(a=>({url:a.href,name:a.getAttribute("download")||a.textContent.trim()}));')
         parts.push('  for(const f of links){')
@@ -265,7 +314,7 @@ export async function POST(req: NextRequest) {
     console.error(error)
 
     return NextResponse.json(
-      { error: "Upload failed" },
+      { error: error instanceof Error ? error.message : "Upload failed" },
       { status: 500 }
     )
   }
