@@ -9,6 +9,8 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [openLogin, setOpenLogin] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null)
+  const [form, setForm] = useState<{ name?: string; email?: string; password?: string }>({})
 
   useEffect(() => {
     let mounted = true
@@ -31,6 +33,10 @@ export default function AccountPage() {
     fetchMe()
     return () => { mounted = false }
   }, [])
+
+  useEffect(() => {
+    if (user) setForm({ name: user.name || '', email: user.email || '' })
+  }, [user])
 
   const signOut = () => {
     try { localStorage.removeItem('token') } catch (e) {}
@@ -114,7 +120,47 @@ export default function AccountPage() {
                         <p className="text-sm font-bold text-slate-800">{item.value}</p>
                       </div>
                     </div>
-                    <button className="px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
+                    {item.label === 'Email Address' ? (
+                      editing === 'email' ? (
+                        <div className="flex items-center gap-2">
+                          <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="px-3 py-2 rounded-lg border" />
+                          <button onClick={async () => {
+                            try {
+                              const res = await fetch('/api/auth/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newEmail: form.email }) })
+                              const data = await res.json()
+                              if (!res.ok) throw new Error(data?.error || 'Update failed')
+                              // refresh
+                              const me = await (await fetch('/api/auth/me')).json()
+                              setUser(me.user)
+                              setEditing(null)
+                            } catch (e:any) { alert(e?.message || 'Failed') }
+                          }} className="px-3 py-2 bg-indigo-600 text-white rounded-lg">Save</button>
+                          <button onClick={() => { setEditing(null); setForm({ ...form, email: user.email }) }} className="px-3 py-2 rounded-lg border">Cancel</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setEditing('email')} className="px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
+                      )
+                    ) : item.label === 'Login Password' ? (
+                      editing === 'password' ? (
+                        <div className="flex items-center gap-2">
+                          <input type="password" placeholder="New password" value={form.password || ''} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="px-3 py-2 rounded-lg border" />
+                          <button onClick={async () => {
+                            try {
+                              const res = await fetch('/api/auth/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: form.password }) })
+                              const data = await res.json()
+                              if (!res.ok) throw new Error(data?.error || 'Update failed')
+                              setEditing(null)
+                              alert('Password updated')
+                            } catch (e:any) { alert(e?.message || 'Failed') }
+                          }} className="px-3 py-2 bg-indigo-600 text-white rounded-lg">Save</button>
+                          <button onClick={() => { setEditing(null); setForm({ ...form, password: '' }) }} className="px-3 py-2 rounded-lg border">Cancel</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setEditing('password')} className="px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
+                      )
+                    ) : (
+                      <button className="px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
+                    )}
                   </div>
                 ))}
               </div>
