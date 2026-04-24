@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { ChevronRight, ArrowRight } from "lucide-react";
-import { subtle } from "crypto";
+import { useRouter } from "next/navigation";
 const navItems = [
   {
     title: "Discover",
@@ -59,12 +58,13 @@ const navItems = [
 
 export default function Navbar({ setOpenLogin }) {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const router = useRouter();
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-linear-to-r from-indigo-500 to-blue-500 text-white px-8 py-4 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-gradient-to-r from-indigo-500 to-blue-500 text-white px-8 py-4 flex items-center justify-between">
       <h1 className="text-2xl font-bold italic">AD Transfer</h1>
 
-      <ul className="flex items-center gap-5 h-14 ml-70" >
+      <ul className="flex items-center gap-5 h-14 ml-8" >
         {navItems.map((item, index) => (
           <li
             key={index}
@@ -78,7 +78,7 @@ export default function Navbar({ setOpenLogin }) {
             </button>
 
             {openDropdown === index && (
-              <div className="absolute left-0 top-full mt-2 rounded-xl bg-white text-gray-800 shadow-xl border border-gray-100 overflow-hidden z-50 w-100">
+              <div className="absolute left-0 top-full mt-2 rounded-xl bg-white text-gray-800 shadow-xl border border-gray-100 overflow-hidden z-50 w-56">
               {item.dropdown.map((subItem, subIndex) => (
   <Link
     key={subIndex}
@@ -105,15 +105,18 @@ export default function Navbar({ setOpenLogin }) {
 
       <div className="flex gap-3 items-center">
         <button
-          onClick={() => setOpenLogin(true)}
+          onClick={() => {
+            if (typeof setOpenLogin === "function") setOpenLogin(true);
+            else router.push("/login");
+          }}
           className="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-200"
         >
           Sign in
         </button>
 
-        <button className="bg-indigo-800 px-4 py-2 rounded-lg font-medium hover:bg-indigo-900">
+        <Link href="/register" className="bg-indigo-800 px-4 py-2 rounded-lg font-medium hover:bg-indigo-900">
           Try for free
-        </button>
+        </Link>
       </div>
     </nav>
   );

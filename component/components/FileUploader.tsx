@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
+import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaInstagram } from 'react-icons/fa'
 
 type Props = {
   onFiles?: (files: File[]) => void
@@ -41,6 +42,11 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
   const [panelOpen, setPanelOpenState] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showFiles, setShowFiles] = useState(false)
+  const [requireAuthModal, setRequireAuthModal] = useState(false)
+  const [authTab, setAuthTab] = useState<'login'|'register'>('login')
+  const [pendingUpload, setPendingUpload] = useState(false)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const setPanelOpen = (val: boolean | ((s: boolean) => boolean)) => {
     setPanelOpenState(val)
@@ -111,6 +117,44 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
     await navigator.clipboard.writeText(shareUrl)
   }
 
+  const shareToInstagram = async () => {
+    if (!shareUrl) return
+    // Try Web Share API first (best on mobile where Instagram appears as a target)
+    try {
+      if (navigator.share) {
+        await (navigator as any).share({ title: 'Shared files', text: shareUrl, url: shareUrl })
+        return
+      }
+    } catch (e) {
+      // ignore and fallback
+    }
+
+    // Fallback: copy link to clipboard and open Instagram
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+    } catch (e) {
+      // ignore
+    }
+    window.open('https://www.instagram.com/', '_blank')
+  }
+
+  const openDeepLink = (primary: string, fallback: string) => {
+    try {
+      // Open primary (could be a custom scheme or intent). We open in a new tab/window.
+      window.open(primary, '_blank')
+    } catch (e) {
+      // ignore
+    }
+    // After a short delay open the web fallback so users on desktop still get the share dialog
+    setTimeout(() => {
+      try {
+        window.open(fallback, '_blank')
+      } catch (e) {
+        // ignore
+      }
+    }, 800)
+  }
+
   const removeFile = (id: string) => {
     setPreviews((prev) => {
       const item = prev.find((p) => p.id === id)
@@ -134,6 +178,18 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
   }
 
+  const MAX_SIZE = 100 * 1024 * 1024 // 100 MB
+
+  const getTotalBytes = () => stagedFiles.reduce((acc, f) => acc + f.size, 0)
+
+  const isLoggedIn = () => {
+    try {
+      return !!localStorage.getItem('token')
+    } catch (e) {
+      return false
+    }
+  }
+
   const getTotalSize = () => {
     const total = stagedFiles.reduce((acc, f) => acc + f.size, 0)
     return formatBytes(total)
@@ -141,6 +197,13 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
 
   const confirmUpload = async () => {
     if (!stagedFiles.length) return
+    const total = getTotalBytes()
+    if (total > MAX_SIZE && !isLoggedIn()) {
+      // require sign up / login before allowing upload of >100MB
+      setRequireAuthModal(true)
+      setPendingUpload(true)
+      return
+    }
     onFiles?.(stagedFiles)
     // show spinner and hide files while processing
     setLoading(true)
@@ -150,6 +213,51 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
     // processing finished: hide spinner, show files
     setLoading(false)
     setShowFiles(true)
+  }
+
+  // Click wrapper: allow opening auth modal when over size instead of hard-disabling the button
+  const handleConfirmClick = async () => {
+    const total = getTotalBytes()
+    if (total > MAX_SIZE && !isLoggedIn()) {
+      setRequireAuthModal(true)
+      setPendingUpload(true)
+      return
+    }
+    await confirmUpload()
+  }
+
+  const finishAuthAndContinue = async () => {
+    setRequireAuthModal(false)
+    setAuthLoading(false)
+    // if user intended to upload, continue
+    if (pendingUpload) {
+      setPendingUpload(false)
+      // small delay to ensure modal state cleared
+      setTimeout(() => confirmUpload(), 150)
+    }
+  }
+
+  const handleAuthSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setAuthError(null)
+    setAuthLoading(true)
+    // This example uses a simple client-side stub. Replace with real API calls.
+    try {
+      // simulate network
+      await new Promise((r) => setTimeout(r, 700))
+      // set a token to mark user as logged in
+      localStorage.setItem('token', 'demo-token')
+      try {
+        // also set a cookie so server-side endpoints can read authentication
+        document.cookie = `token=demo-token; path=/; max-age=${60 * 60 * 24 * 7}` // 7 days
+      } catch (e) {
+        // ignore cookie issues (e.g., strict environments)
+      }
+      finishAuthAndContinue()
+    } catch (err) {
+      setAuthError('Authentication failed')
+      setAuthLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -279,8 +387,8 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
 
                   {/* Submit Button */}
                   <button
-                    onClick={confirmUpload}
-                    className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+                    onClick={handleConfirmClick}
+                    className={`w-full mt-6 ${getTotalBytes() > MAX_SIZE && !isLoggedIn() ? 'bg-gray-300' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2`}
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -374,7 +482,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
                         <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
                         <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Link is ready</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mb-3">
                         <input
                           value={shareUrl ?? ''}
                           readOnly
@@ -387,6 +495,60 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
                           Copy
                         </button>
                       </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => openDeepLink(
+                            `whatsapp://send?text=${encodeURIComponent(shareUrl)}`,
+                            `https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`
+                          )}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-emerald-100 text-emerald-500 rounded-full hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                          title="Share on WhatsApp"
+                        >
+                          <FaWhatsapp className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => openDeepLink(
+                            `fb://facewebmodal/f?href=${encodeURIComponent(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`)}`,
+                            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+                          )}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-blue-100 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          title="Share on Facebook"
+                        >
+                          <FaFacebook className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => openDeepLink(
+                            `twitter://post?message=${encodeURIComponent(shareUrl)}`,
+                            `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`
+                          )}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-slate-100 text-slate-900 rounded-full hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                          title="Share on X (Twitter)"
+                        >
+                          <FaTwitter className="w-5 h-5" />
+                        </button>
+                        
+                        <button
+                          onClick={shareToInstagram}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-pink-100 text-pink-600 rounded-full hover:bg-pink-600 hover:text-white transition-all shadow-sm"
+                          title="Share on Instagram (copies link and opens Instagram)"
+                        >
+                          <FaInstagram className="w-5 h-5" />
+                        </button>
+
+                        <button
+                          onClick={() => openDeepLink(
+                            `tg://msg?text=${encodeURIComponent(shareUrl)}`,
+                            `https://telegram.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out these files I shared with you!')}`
+                          )}
+                          className="w-10 h-10 flex items-center justify-center bg-white border border-sky-100 text-sky-600 rounded-full hover:bg-sky-600 hover:text-white transition-all shadow-sm"
+                          title="Share on Telegram"
+                        >
+                          <FaTelegram className="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -397,6 +559,49 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange }) => {
       </div>
 
       {/* Hidden Inputs */}
+      {requireAuthModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setAuthTab('login')}
+                  className={`px-3 py-1 rounded-md ${authTab === 'login' ? 'bg-indigo-600 text-white' : 'bg-transparent text-slate-700'}`}
+                >
+                  Sign in
+                </button>
+                <button
+                  onClick={() => setAuthTab('register')}
+                  className={`px-3 py-1 rounded-md ${authTab === 'register' ? 'bg-indigo-600 text-white' : 'bg-transparent text-slate-700'}`}
+                >
+                  Register
+                </button>
+              </div>
+              <button onClick={() => { setRequireAuthModal(false); setPendingUpload(false) }} className="text-slate-500">Close</button>
+            </div>
+
+            <p className="text-sm text-slate-600 mb-4">Files larger than 100 MB require an account. Sign in or register to continue sharing large files.</p>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-3">
+              {authTab === 'register' && (
+                <input required name="name" placeholder="Full name" className="w-full px-3 py-2 border rounded-lg" />
+              )}
+
+              <input required name="email" type="email" placeholder="Email" className="w-full px-3 py-2 border rounded-lg" />
+              <input required name="password" type="password" placeholder="Password" className="w-full px-3 py-2 border rounded-lg" />
+
+              {authError && <p className="text-xs text-red-500">{authError}</p>}
+
+              <div className="flex gap-3 justify-end">
+                <button type="button" onClick={() => { setRequireAuthModal(false); setPendingUpload(false) }} className="px-4 py-2 bg-gray-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg" disabled={authLoading}>
+                  {authLoading ? 'Signing...' : (authTab === 'login' ? 'Sign in' : 'Register')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <input
         ref={fileInputRef}
         type="file"
