@@ -50,7 +50,7 @@ const Hero = () => {
 
               </svg>
 
-              <FileUploader />
+              <FileUploader compact />
             </div>
           </div>
         </div>
