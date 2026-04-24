@@ -81,7 +81,11 @@ export async function POST(req: NextRequest) {
         if (typeof verifyToken === 'function') {
           // support both sync and async verifyToken implementations
           const maybe = verifyToken(token)
-          validUser = maybe instanceof Promise ? await maybe : maybe
+          if (maybe && typeof (maybe as any).then === 'function') {
+            validUser = await maybe
+          } else {
+            validUser = maybe
+          }
         } else {
           validUser = null
         }
