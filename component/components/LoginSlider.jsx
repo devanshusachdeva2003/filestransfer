@@ -48,14 +48,13 @@ export default function LoginSlider({ openLogin, setOpenLogin }) {
         className={`fixed top-0 right-0 h-full w-full sm:w-105 bg-white z-70 shadow-2xl transform transition-transform duration-300 ease-in-out relative ${
           openLogin ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="h-full flex flex-col">
-          <div className="flex items-center px-6 py-5 border-b relative">
+          <div className="flex items-center px-6 py-5 border-b">
             <button
               onClick={() => setOpenLogin(false)}
               aria-label="Close login"
-              className="absolute right-3 top-3 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center shadow"
+              className="ml-auto p-2"
             >
               <X size={20} />
             </button>
