@@ -56,6 +56,12 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
     onPanelChange?.(panelOpen)
   }, [panelOpen, onPanelChange])
 
+  useEffect(() => {
+    const handleOpenUploader = () => setPanelOpen(true)
+    window.addEventListener('open-file-uploader', handleOpenUploader)
+    return () => window.removeEventListener('open-file-uploader', handleOpenUploader)
+  }, [])
+
   const handleFiles = (filesList: FileList | null) => {
     const files = Array.from(filesList || [])
     console.debug('handleFiles received', files.length, files.map((f) => ((f as any).webkitRelativePath || f.name)))
