@@ -1,3 +1,36 @@
 
 @import "tailwindcss";
 
+/* Responsive helpers: keep layout usable on small screens without touching components */
+
+img, video, iframe, svg {
+	max-width: 100%;
+	height: auto;
+}
+
+/* Ensure form controls and buttons don't overflow on small screens */
+input, textarea, select, button {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Lightweight mobile adjustments (only apply below 640px) */
+@media (max-width: 640px) {
+	/* make common max-width utility containers fluid on small screens */
+	.max-w-6xl, .max-w-4xl, .max-w-3xl, .max-w-2xl, .max-w-xl, .max-w-lg, .max-w-md, .max-w-sm {
+		width: 100% !important;
+		max-width: 100% !important;
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+	}
+
+	/* reduce heavy paddings to preserve space */
+	.p-6 { padding: 1rem !important; }
+	.p-8 { padding: 1rem !important; }
+	.px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+
+	/* slightly smaller rounded corners on mobile */
+	.rounded-3xl { border-radius: 1rem !important; }
+}
+
+

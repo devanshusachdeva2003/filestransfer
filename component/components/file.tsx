@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 import { Download, List, Share2, ChevronUp } from "lucide-react"
 const FileSteps: React.FC = () => {
   return (
@@ -43,7 +44,6 @@ const FileSteps: React.FC = () => {
 
         <div className="mt-8">
           <button className="bg-indigo-600 text-white px-6 py-3 rounded shadow">Send files now</button>
-          
         </div>
       </div>
 
@@ -114,8 +114,8 @@ const FileSteps: React.FC = () => {
           </div>
         </div>
          <div className="mt-15 flex justify-center gap-5">
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded shadow">Free trial</button>
-           <button className=" text-indigo-600 border border-indigo-600 px-6 py-3 rounded shadow">Compare our offers</button>
+          <Link href="/freetrial" className="bg-indigo-600 text-white px-6 py-3 rounded shadow">Free trial</Link>
+          <Link href="/compare" className="text-indigo-600 border border-indigo-600 px-6 py-3 rounded shadow">Compare our offers</Link>
         </div>
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-15 max-w-6xl mx-auto ">
           <div className="bg-white rounded-2xl p-6 shadow-md">
@@ -216,9 +216,9 @@ const FileSteps: React.FC = () => {
             <span className="font-semibold">simple line of HTML code</span> on your internet site you can directly receive files.
           </p>
 
-          <button className="mt-10 rounded-xl bg-[#5963d5] px-7 py-4 text-lg font-semibold text-white hover:bg-[#4c56c8]">
+          <Link href="/freetrial" className="mt-10 inline-block rounded-xl bg-[#5963d5] px-7 py-4 text-lg font-semibold text-white hover:bg-[#4c56c8]">
             Free trial
-          </button>
+          </Link>
         </div>
 
         {/* RIGHT */}
