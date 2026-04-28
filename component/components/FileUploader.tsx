@@ -331,10 +331,33 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
               onClick={() => setPanelOpen(true)}
               className="relative group flex items-center justify-center w-full h-full"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-orange-500 font-semibold transition-opacity duration-150 group-hover:opacity-0">Start</span>
-              <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-orange-400"><path d="M19 18a4 4 0 0 0-.97-7.88A6 6 0 0 0 6.24 9.2 4.5 4.5 0 0 0 6.5 18H10v-3.59L8.7 15.7a1 1 0 1 1-1.4-1.4l3-3a1 1 0 0 1 1.4 0l3 3a1 1 0 1 1-1.4 1.4L12 14.41V18h7Z" /></svg>
-              </span>
+             <div className="flex flex-col items-center justify-center">
+  <div className="relative w-50 h-50 flex items-center justify-center group cursor-pointer">
+
+    {/* rotating border */}
+    <div className="absolute inset-0 rounded-full border-[12px] border-purple-800 border-t-white animate-spin"></div>
+
+    {/* inner circle */}
+    <div className="relative z-10 w-45 h-45 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-xl">
+
+      <span className="absolute text-3xl font-semibold text-black transition-all duration-300 group-hover:opacity-0 group-hover:scale-75">
+        Start
+      </span>
+
+      <span className="absolute flex items-center justify-center opacity-0 scale-75 transition-all duration-300 group-hover:opacity-100 group-hover:scale-100">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-15 h-15 text-gray-700"
+        >
+          <path d="M19 18a4 4 0 0 0-.97-7.88A6 6 0 0 0 6.24 9.2 4.5 4.5 0 0 0 6.5 18H10v-3.59L8.7 15.7a1 1 0 1 1-1.4-1.4l3-3a1 1 0 0 1 1.4 0l3 3a1 1 0 1 1-1.4 1.4L12 14.41V18h7Z" />
+        </svg>
+      </span>
+
+    </div>
+  </div>
+</div>
             </div>
           </div>
         )}
