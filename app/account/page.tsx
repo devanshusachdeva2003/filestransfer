@@ -6,6 +6,7 @@ import { User, Mail, Calendar, LogOut, Shield, Settings, Activity, HardDrive, Be
 
 export default function AccountPage() {
   const [user, setUser] = useState<any>(null)
+  const [transfers, setTransfers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [openLogin, setOpenLogin] = useState(false);
@@ -37,6 +38,22 @@ export default function AccountPage() {
   useEffect(() => {
     if (user) setForm({ name: user.name || '', email: user.email || '' })
   }, [user])
+
+  useEffect(() => {
+    let mounted = true
+    async function fetchTransfers() {
+      try {
+        const res = await fetch('/api/share/list')
+        if (!res.ok) return
+        const data = await res.json()
+        if (mounted) setTransfers(data || [])
+      } catch (e) {
+        // ignore
+      }
+    }
+    fetchTransfers()
+    return () => { mounted = false }
+  }, [])
 
   const signOut = () => {
     try { localStorage.removeItem('token') } catch (e) {}
@@ -175,16 +192,37 @@ export default function AccountPage() {
                 <button className="text-xs font-bold text-indigo-600 uppercase tracking-widest hover:underline">View All</button>
               </div>
               
-              <div className="text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Activity size={28} className="text-slate-300" />
+              {(!transfers || transfers.length === 0) ? (
+                <div className="text-center py-16 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                  <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Activity size={28} className="text-slate-300" />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-900 mb-1">No transfers yet</h4>
+                  <p className="text-slate-500 text-sm mb-6">Start sharing files to see your activity here.</p>
+                  <button onClick={() => window.location.href = '/'} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+                    Send Your First File
+                  </button>
                 </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-1">No transfers yet</h4>
-                <p className="text-slate-500 text-sm mb-6">Start sharing files to see your activity here.</p>
-                <button onClick={() => window.location.href = '/'} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
-                  Send Your First File
-                </button>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {transfers.slice(0,3).map((t: any) => (
+                    <div key={t.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-sm transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-indigo-600 shadow-sm">
+                          <Activity size={20} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{t.subject || 'Shared Files'}</p>
+                          <p className="text-xs text-slate-400">{(t.files || []).length} file{(t.files||[]).length !== 1 ? 's' : ''} • {t.createdAt ? new Date(t.createdAt).toLocaleString() : t.expiry ? new Date(t.expiry).toLocaleString() : ''}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a href={`/share/${t.id}`} className="text-xs font-bold text-indigo-600 hover:underline">View</a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
