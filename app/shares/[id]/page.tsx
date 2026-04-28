@@ -14,6 +14,7 @@ export default function SharePage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [files, setFiles] = useState<string[]>([])
+  const [openLogin, setOpenLogin] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -188,7 +189,7 @@ export default function SharePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pt-20">
-      <Navbar />
+      <Navbar setOpenLogin={setOpenLogin} />
       <div className="max-w-4xl mx-auto py-16">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">Your files are ready!</h1>
