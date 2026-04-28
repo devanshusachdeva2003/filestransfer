@@ -584,7 +584,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
                         </div>
                         <button
                           onClick={copyLink}
-                          className={`min-w-[80px] font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 ${
+                          className={`min-w-[64px] sm:min-w-[80px] font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2 ${
                             copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                           }`}
                         >
