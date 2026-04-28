@@ -1,26 +1,13 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-const sharesDir = path.join(process.cwd(), 'data', 'shares')
+import { getDb } from '@/app/lib/mongo'
 
 export async function GET() {
   try {
-    if (!fs.existsSync(sharesDir)) return NextResponse.json([])
-    const files = await fs.promises.readdir(sharesDir)
-    const result = await Promise.all(files.map(async f => {
-      try {
-        const raw = await fs.promises.readFile(path.join(sharesDir, f), 'utf8')
-        const data = JSON.parse(raw)
-        return { id: data.id, subject: data.subject || null, files: data.files || [], expiry: data.expiry || null, createdAt: data.createdAt || data.created || null }
-      } catch (e) {
-        return null
-      }
-    }))
-
-    const filtered = result.filter(Boolean)
-    filtered.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0))
-    return NextResponse.json(filtered)
+    const db = await getDb()
+    const col = db.collection('shares')
+    const docs = await col.find({}).sort({ createdAt: -1 }).limit(100).toArray()
+    const out = docs.map((d: any) => ({ id: d.id, subject: d.subject || null, files: d.files || [], expiry: d.expiry || null, createdAt: d.createdAt || null }))
+    return NextResponse.json(out)
   } catch (e) {
     console.error(e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })

@@ -14,6 +14,12 @@ export default function AccountPage() {
   const [form, setForm] = useState<{ name?: string; email?: string; password?: string }>({})
 
   useEffect(() => {
+    // show cached user immediately while we validate on the server
+    try {
+      const cached = localStorage.getItem('user')
+      if (cached) setUser(JSON.parse(cached))
+    } catch (e) {}
+
     let mounted = true
     async function fetchMe() {
       setLoading(true)
@@ -24,7 +30,10 @@ export default function AccountPage() {
           throw new Error(data?.error || 'Failed to fetch')
         }
         const data = await res.json()
-        if (mounted) setUser(data.user)
+        if (mounted) {
+          setUser(data.user)
+          try { localStorage.setItem('user', JSON.stringify(data.user || null)) } catch (e) {}
+        }
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed')
       } finally {
@@ -32,7 +41,9 @@ export default function AccountPage() {
       }
     }
     fetchMe()
-    return () => { mounted = false }
+    const onLogin = () => { try { const cached = localStorage.getItem('user'); if (cached) setUser(JSON.parse(cached)) } catch (e) {} }
+    window.addEventListener('logged-in', onLogin)
+    return () => { mounted = false; window.removeEventListener('logged-in', onLogin) }
   }, [])
 
   useEffect(() => {
@@ -57,7 +68,9 @@ export default function AccountPage() {
 
   const signOut = () => {
     try { localStorage.removeItem('token') } catch (e) {}
+    try { localStorage.removeItem('user') } catch (e) {}
     try { document.cookie = 'token=; Max-Age=0; path=/'; } catch (e) {}
+    try { window.dispatchEvent(new Event('logged-out')) } catch (e) {}
     window.location.href = '/'
   }
 

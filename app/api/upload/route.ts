@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
+import { getDb } from '@/app/lib/mongo'
 import { v2 as cloudinary } from 'cloudinary'
 
 const cloudinaryConfig = process.env.CLOUDINARY_URL
@@ -141,13 +142,10 @@ export async function POST(req: NextRequest) {
     const expiryTimestamp = Date.now() + EXPIRY_MS
     if (createShare && uploadedFiles.length) {
       try {
-        const sharesDir = path.join(process.cwd(), 'data', 'shares')
-        try { await fs.promises.mkdir(sharesDir, { recursive: true }) } catch (e) { }
-
         const id = `share-${Date.now()}-${Math.random().toString(36).slice(2,9)}`
         const expiry = Date.now() + (4 * 60 * 60 * 1000) // 4 hours
 
-        const payload = {
+        const payload: any = {
           id,
           files: uploadedFiles,
           createdAt: Date.now(),
@@ -157,13 +155,26 @@ export async function POST(req: NextRequest) {
           email: email || null,
         }
 
-        const filePath = path.join(sharesDir, `${id}.json`)
-        await fs.promises.writeFile(filePath, JSON.stringify(payload, null, 2), 'utf8')
+        try {
+          const db = await getDb()
+          const col = db.collection('shares')
+          await col.insertOne(payload)
+        } catch (e) {
+          console.error('mongo insert share failed', e)
+          // fallback: write to local file for compatibility
+          try {
+            const sharesDir = path.join(process.cwd(), 'data', 'shares')
+            await fs.promises.mkdir(sharesDir, { recursive: true })
+            const filePath = path.join(sharesDir, `${id}.json`)
+            await fs.promises.writeFile(filePath, JSON.stringify(payload, null, 2), 'utf8')
+          } catch (e2) {
+            console.error('create local share fallback failed', e2)
+          }
+        }
 
-        // return a relative path; client will prefix origin
         sharePath = `/shares/${id}`
       } catch (e) {
-        console.error('create local share failed', e)
+        console.error('create share failed', e)
         sharePath = null
       }
     }

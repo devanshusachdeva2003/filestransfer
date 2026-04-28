@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react"
 import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaInstagram, FaShareAlt, FaCheck } from 'react-icons/fa'
+import fileCache from './fileCache'
 
 type Props = {
   onFiles?: (files: File[]) => void
@@ -60,16 +61,25 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
     console.debug('handleFiles received', files.length, files.map((f) => ((f as any).webkitRelativePath || f.name)))
     if (!files.length) return
 
-    const next = files.map((f) => ({
-      id: crypto.randomUUID(),
-      file: f,
-      url: URL.createObjectURL(f),
-      // preserve folder path when available
-      name: (f as any).webkitRelativePath || f.name,
-    }))
-
-    setPreviews((prev) => [...prev, ...next])
-    setStagedFiles((prev) => [...prev, ...files])
+    ;(async () => {
+      try {
+        const saved = await fileCache.saveFiles(files)
+        const next = files.map((f, idx) => ({
+          id: saved[idx].id,
+          file: f,
+          url: URL.createObjectURL(f),
+          // preserve folder path when available
+          name: (f as any).webkitRelativePath || f.name,
+        }))
+        setPreviews((prev) => [...prev, ...next])
+        setStagedFiles((prev) => [...prev, ...files])
+      } catch (e) {
+        // fallback if IDB not available
+        const next = files.map((f) => ({ id: crypto.randomUUID(), file: f, url: URL.createObjectURL(f), name: (f as any).webkitRelativePath || f.name }))
+        setPreviews((prev) => [...prev, ...next])
+        setStagedFiles((prev) => [...prev, ...files])
+      }
+    })()
   }
 
   // Ensure non-standard attributes are present on the folder input
@@ -184,6 +194,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
         try {
           URL.revokeObjectURL(item.url)
         } catch (e) { }
+        try { fileCache.deleteFile(item.id).catch(() => {}) } catch (e) {}
       }
       return prev.filter((p) => p.id !== id)
     })
@@ -270,6 +281,25 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
       previews.forEach((p) => URL.revokeObjectURL(p.url))
     }
   }, [previews])
+
+  // restore persisted files from IndexedDB on mount
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const existing = await fileCache.loadAllFiles()
+        if (!mounted) return
+        if (existing && existing.length) {
+          const next = existing.map((e) => ({ id: e.id, file: e.file, url: URL.createObjectURL(e.file), name: e.name }))
+          setPreviews(next as any)
+          setStagedFiles(existing.map((e) => e.file))
+        }
+      } catch (e) {
+        // ignore
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const rootClass = compact ? 'w-full h-full p-0' : 'p-6'
 
@@ -463,7 +493,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
                       {stagedFiles.length} files <span className="text-slate-400 font-normal">({getTotalSize()})</span>
                     </h3>
                     <button
-                      onClick={() => { setPreviews([]); setStagedFiles([]); setShareUrl(null) }}
+                      onClick={async () => { setPreviews([]); setStagedFiles([]); setShareUrl(null); try { await fileCache.clearAll() } catch (e) {} }}
                       className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                       title="Clear all"
                     >
