@@ -401,12 +401,7 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
               <div className="relative bg-white shadow-[0_30px_60px_-12px_rgba(0,0,0,0.25)] rounded-3xl w-full sm:w-[380px] lg:w-[420px] flex flex-col overflow-hidden h-[560px] md:h-[650px] max-h-[calc(100vh-100px)] animate-in slide-in-from-left-8 duration-700">
                 {/* Tabs */}
                 <div className="flex border-b">
-                  <button
-                    onClick={() => setActiveTab('send')}
-                    className={`flex-1 py-4 text-sm font-semibold transition-all ${activeTab === 'send' ? 'bg-white text-slate-900 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}
-                  >
-                    Send files
-                  </button>
+                 
                   <button
                     onClick={() => setActiveTab('link')}
                     className={`flex-1 py-4 text-sm font-semibold transition-all ${activeTab === 'link' ? 'bg-white text-slate-900 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-500 hover:text-slate-700'}`}
