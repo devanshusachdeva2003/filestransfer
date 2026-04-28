@@ -9,36 +9,36 @@ const navItems = [
     title: "Solutions",
     href: "#",
     dropdown: [
-      { name: "For Individuals", description: "Secure file sharing for everyone.", href: "#" },
-      { name: "For Teams", description: "Collaborate and share with your team.", href: "#" },
-      { name: "Enterprise", description: "Advanced security for large companies.", href: "#" },
+      { name: "For Individuals", description: "Secure file sharing for everyone.", href: "/forindivisual" },
+      { name: "For Teams", description: "Collaborate and share with your team.", href: "/teams" },
+      { name: "Enterprise", description: "Advanced security for large companies.", href: "/enterprise" },
     ],
   },
   {
     title: "Discover",
     href: "#",
     dropdown: [
-      { name: "TransferNow Pro", description: "The professional way to send files.", href: "/discover" },
-      { name: "Core Features", description: "Everything you can do with AD Transfer.", href: "#" },
-      { name: "Free Trial", description: "Try premium features for 7 days.", href: "/register" },
+      { name: "TransferNow Pro", description: "The professional way to send files.", href: "/transfernow" },
+      { name: "Core Features", description: "Everything you can do with AD Transfer.", href: "/corefeature" },
+      { name: "Free Trial", description: "Try premium features for 7 days.", href: "/freetrial" },
     ],
   },
   {
     title: "Developers",
     href: "#",
     dropdown: [
-      { name: "API Reference", description: "Built for seamless integrations.", href: "#" },
-      { name: "SDKs & Tools", description: "Open source kits for every language.", href: "#" },
-      { name: "Status", description: "Check our system uptime and health.", href: "#" },
+      { name: "API Reference", description: "Built for seamless integrations.", href: "/reference" },
+      { name: "SDKs & Tools", description: "Open source kits for every language.", href: "/tools" },
+      { name: "Status", description: "Check our system uptime and health.", href: "/status" },
     ],
   },
   {
     title: "Resources",
     href: "#",
     dropdown: [
-      { name: "Help Center", description: "Guides, tips, and troubleshooting.", href: "#" },
-      { name: "Security", description: "Our commitment to your data privacy.", href: "#" },
-      { name: "Blog", description: "Latest news and product updates.", href: "#" },
+      { name: "Help Center", description: "Guides, tips, and troubleshooting.", href: "help" },
+      { name: "Security", description: "Our commitment to your data privacy.", href: "security" },
+      { name: "Blog", description: "Latest news and product updates.", href: "blog" },
     ],
   },
 ];
