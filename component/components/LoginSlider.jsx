@@ -45,12 +45,12 @@ export default function LoginSlider({ openLogin, setOpenLogin }) {
         }`}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-105 bg-white z-70 shadow-2xl transform transition-transform duration-300 ease-in-out relative ${
+        className={`fixed inset-y-0 right-0 h-full w-full sm:max-w-[480px] bg-white z-70 shadow-2xl transform transition-transform duration-300 ease-in-out relative ${
           openLogin ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="h-full flex flex-col">
-          <div className="flex items-center px-6 py-5 border-b">
+          <div className="flex items-center px-4 py-4 border-b sticky top-0 bg-white z-20">
             <button
               onClick={() => setOpenLogin(false)}
               aria-label="Close login"
@@ -60,8 +60,8 @@ export default function LoginSlider({ openLogin, setOpenLogin }) {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-8 bg-gray-50">
-            <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md p-8 mt-10">
+          <div className="flex-1 overflow-y-auto px-4 py-6 bg-gray-50">
+            <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md p-6 mt-6">
               <h2 className="text-3xl font-bold mb-8 text-gray-900">Sign in to your account</h2>
 
               <form onSubmit={submit} className="space-y-4">

@@ -12,7 +12,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>
+      <body className="pt-16 md:pt-20">
         {children}
       </body>
     </html>
