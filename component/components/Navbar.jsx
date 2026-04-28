@@ -161,13 +161,13 @@ export default function Navbar({ setOpenLogin }) {
           aria-modal="true"
           onClick={() => setMobileOpen(false)}
         >
-          <div className="max-w-lg mx-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">AD Transfer</h2>
-              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2">
-                <X />
-              </button>
-            </div>
+              <div className="max-w-lg mx-auto" onClick={(e) => e.stopPropagation()} style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold">AD Transfer</h2>
+                  <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2 bg-gray-100 rounded-full shadow hover:bg-gray-200">
+                    <X />
+                  </button>
+                </div>
 
             <div className="space-y-4">
               {navItems.map((group, i) => (
