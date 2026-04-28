@@ -43,7 +43,12 @@ const FileSteps: React.FC = () => {
         </div>
 
         <div className="mt-8">
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded shadow">Send files now</button>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-file-uploader'))}
+            className="bg-indigo-600 text-white px-6 py-3 rounded shadow"
+          >
+            Send files now
+          </button>
         </div>
       </div>
 

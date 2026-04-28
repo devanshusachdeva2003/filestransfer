@@ -35,20 +35,69 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-2">Create an account</h2>
-        <p className="text-sm text-slate-500 mb-6">Register to upload large files and manage your shares.</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" required className="w-full px-4 py-3 border rounded-lg" />
-          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" required className="w-full px-4 py-3 border rounded-lg" />
-          <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" required className="w-full px-4 py-3 border rounded-lg" />
-          {error && <div className="text-sm text-red-500">{error}</div>}
-          <div className="flex items-center justify-between">
-            <button type="submit" className="px-5 py-3 bg-indigo-600 text-white rounded-lg" disabled={loading}>{loading ? 'Creating...' : 'Create account'}</button>
-          </div>
-        </form>
+    <main className="min-h-screen bg-white flex items-center justify-center px-6 py-20">
+    <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-gray-900">
+          Create an account
+        </h2>
+
+        <p className="mt-2 text-sm text-gray-500">
+          Register to upload large files and manage your shares.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Full name"
+          required
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        />
+
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email address"
+          type="email"
+          required
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        />
+
+        <input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          type="password"
+          required
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-800 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        />
+
+        {error && (
+          <div className="text-sm text-red-500">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-70"
+        >
+          {loading ? "Creating..." : "Create account"}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        Already have an account?{" "}
+        <span className="cursor-pointer font-medium text-indigo-600 hover:underline">
+          Login
+        </span>
+      </p>
+
     </div>
+  </main>
   )
 }
