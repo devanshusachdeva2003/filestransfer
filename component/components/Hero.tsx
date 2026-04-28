@@ -28,25 +28,7 @@ const Hero = () => {
                 viewBox="0 0 100 100"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="#ffe8d6"
-                  strokeWidth="10"
-                  fill="none"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="#ff7a18"
-                  strokeWidth="10"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray="251.2"
-                  strokeDashoffset="80"
-                />
+              
 
               </svg>
 
