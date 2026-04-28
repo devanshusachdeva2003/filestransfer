@@ -156,20 +156,20 @@ export default function Navbar({ setOpenLogin }) {
       {/* Mobile menu overlay (click backdrop to close) */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-60 bg-white text-slate-900 p-4 overflow-auto md:hidden max-h-screen"
+          className="fixed inset-0 z-60 bg-white text-slate-900 md:hidden"
           role="dialog"
           aria-modal="true"
           onClick={() => setMobileOpen(false)}
         >
-              <div className="max-w-lg mx-auto" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold">AD Transfer</h2>
-                  <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2">
-                    <X />
-                  </button>
-                </div>
+          <div className="w-full h-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-4 py-4 border-b safe-top">
+              <h2 className="text-xl font-bold">AD Transfer</h2>
+              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2">
+                <X />
+              </button>
+            </div>
 
-            <div className="space-y-4">
+            <div className="p-4 space-y-4 overflow-auto h-[calc(100dvh-64px)]">
               {navItems.map((group, i) => (
                 <div key={i} className="border-b pb-3">
                   <div className="flex items-center justify-between">

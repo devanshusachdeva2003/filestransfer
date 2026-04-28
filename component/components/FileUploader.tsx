@@ -374,11 +374,11 @@ const FileUploader: React.FC<Props> = ({ onFiles, onPanelChange, compact }) => {
         {panelOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 md:p-8 overflow-y-auto animate-in fade-in duration-300">
             <div
-              className="relative w-full max-w-[1000px] flex flex-row flex-wrap justify-center items-start gap-8"
+              className="relative w-full max-w-[1000px] flex flex-col md:flex-row flex-wrap justify-center items-start gap-6 md:gap-8 px-2 md:px-0"
             >
               <button
                 onClick={() => setPanelOpen(false)}
-                className="absolute -top-10 right-2 p-2 text-white/60 hover:text-white transition-colors bg-white/10 rounded-full md:bg-transparent"
+                className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors bg-white/10 rounded-full md:bg-transparent"
                 title="Close"
               >
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
