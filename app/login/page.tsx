@@ -26,6 +26,16 @@ export default function LoginPage() {
       if (token) {
         try { localStorage.setItem('token', token) } catch (e) {}
         try { document.cookie = `token=${token}; path=/` } catch (e) {}
+        try {
+          // fetch current user and cache it for immediate display after refresh
+          const meRes = await fetch('/api/auth/me')
+          if (meRes.ok) {
+            const meData = await meRes.json()
+            try { localStorage.setItem('user', JSON.stringify(meData.user || null)) } catch (e) {}
+          }
+        } catch (e) {}
+        // notify other tabs/components
+        try { window.dispatchEvent(new Event('logged-in')) } catch (e) {}
       }
       router.push('/')
     } catch (err: any) {

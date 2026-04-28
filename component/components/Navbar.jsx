@@ -131,8 +131,10 @@ export default function Navbar({ setOpenLogin }) {
             <button
               onClick={() => {
                 try { localStorage.removeItem('token') } catch (e) {}
+                try { localStorage.removeItem('user') } catch (e) {}
                 try { document.cookie = 'token=; Max-Age=0; path=/'; } catch (e) {}
                 setLoggedIn(false);
+                try { window.dispatchEvent(new Event('logged-out')) } catch (e) {}
                 router.refresh();
               }}
               className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600"
