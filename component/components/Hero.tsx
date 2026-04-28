@@ -38,14 +38,7 @@ const Hero = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-6 flex gap-4">
-        <button className="bg-yellow-400 hover:brightness-95 text-slate-900 px-6 py-3 rounded-full font-medium shadow">
-          Send
-        </button>
-        <button className="bg-white text-slate-800 px-5 py-3 rounded-full font-medium shadow">
-          Receive
-        </button>
-      </div>
+      
     </section>
   );
 };
